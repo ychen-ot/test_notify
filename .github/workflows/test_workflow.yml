@@ -31,7 +31,7 @@ jobs:
         with:
           payload: |
             {
-              "text": "*Scrape harvest action failed*\nDetails see: ${{ env.URL }}",
+              "text": "*Scrape harvest action failed*\n>Details see: ${{ env.URL }}"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
