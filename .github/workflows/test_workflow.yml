@@ -28,7 +28,7 @@ jobs:
           url=${{ github.event.pull_request.url }}
           echo "URL=$url" >> "$GITHUB_ENV"
       - name: Send GitHub Action trigger data to Slack - Success
-        if: ${{ success() }}
+        if: ${{ !success() }}
         uses: slackapi/slack-github-action@v1.16.0
         with:
           payload: |
@@ -38,7 +38,7 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
       - name: Send GitHub Action trigger data to Slack - Others
-        if: ${{ !success() }}
+        if: ${{ success() }}
         uses: slackapi/slack-github-action@v1.16.0
         with:
           payload: |
