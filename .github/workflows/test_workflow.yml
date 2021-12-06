@@ -27,19 +27,18 @@ jobs:
         run: |
           url=${{ github.event.pull_request.url }}
           echo "URL=$url" >> "$GITHUB_ENV"
-      - name: Check status
+      - name: Send GitHub Action trigger data to Slack
         run: |
           if [[ $status == "success" ]]; then 
-            MSG=":white_check_mark: *Scrape harvest: ${{ job.status }}*\n>Run details: ${{ env.ACTION_URL }}/${{ github.run_id }}"
+            msg=":white_check_mark: *Scrape harvest: ${{ job.status }}*\n>Run details: ${{ env.ACTION_URL }}/${{ github.run_id }}"
           else
-            MSG=":x: *Scrape harvest: ${{ job.status }}*\n>Run details: ${{ env.ACTION_URL }}/${{ github.run_id }}"
+            msg=":x: *Scrape harvest: ${{ job.status }}*\n>Run details: ${{ env.ACTION_URL }}/${{ github.run_id }}"
           fi
-      - name: Send GitHub Action trigger data to Slack
         uses: slackapi/slack-github-action@v1.16.0
         with:
           payload: |
             {
-              "text": ${{ env.MSG }}
+              "text": $msg
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
