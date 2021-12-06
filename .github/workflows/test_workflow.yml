@@ -30,11 +30,12 @@ jobs:
         with:
           payload: |
             {
+              "text": "Scrape harvest action failed",
               "blocks": [{
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": "Scrape harvest action failed.\n Details see: ${{ env.URL }}"
+                  "text": "Details see: ${{ env.URL }}"
                 }
               }]
             }
