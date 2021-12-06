@@ -7,6 +7,8 @@ on:
   pull_request:
     branches: [ alert_test ]
 
+env:
+  ACTION_URL: "https://github.com/Quansight/scrape_harvest/actions/runs"
 
 jobs:
   build:
@@ -31,7 +33,7 @@ jobs:
         with:
           payload: |
             {
-              "text": "*Scrape harvest job: ${{ job.status }}*\n>Run details: https://github.com/Quansight/scrape_harvest/actions/runs/${{ github.run_id }} "
+              "text": "*Scrape harvest job: ${{ job.status }}*\n>Run details: ${{ env.ACTION_URL }}/${{ github.run_id }} "
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
