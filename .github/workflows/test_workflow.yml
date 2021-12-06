@@ -1,3 +1,4 @@
+
 name: test_workflow_notify
 
 on:
@@ -28,7 +29,10 @@ jobs:
         id: slack
         uses: slackapi/slack-github-action@v1.16.0
         with:
-          payload: "{\"text\":\"Incoming Webhook test for slack send\", \"blocks\":[{\"type\":\"section\",\"text\":{\"type\":\"plain_text\",\"text\":\"A post by Slack Send GitHub Action. Testing Incoming webhooks\",\"emoji\":true}}]}"
+          payload: |
+            {
+              "text": "*Scrape harvest action failed*\nDetails see: ${{ env.URL }}",
+            }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
