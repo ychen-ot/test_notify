@@ -28,7 +28,18 @@ jobs:
         id: slack
         uses: slackapi/slack-github-action@v1.16.0
         with:
-          payload: "{\"author\":\"${{ github.event.sender.login }}\",\"url\":\"${{ env.URL}}\", \"repoName\":\"${{ github.event.repository.full_name }}\", \"status\":\"${{ job.status }}\"}"
+          payload: |
+           {
+             "blocks": [
+               { 
+                 "type": "section",
+                 "text": {
+                  "type": "mrkdwn",
+                  "text": "Scrape harvest action failed.\nDetails see: ${{ env.URL }}"}"
+                 }
+               }
+	     ]
+           }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
