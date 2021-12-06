@@ -28,17 +28,17 @@ jobs:
           url=${{ github.event.pull_request.url }}
           echo "URL=$url" >> "$GITHUB_ENV"
       - name: Send GitHub Action trigger data to Slack - Success
-        if: ${{ success() }} 
+        if: ${{ !success() }} 
         uses: slackapi/slack-github-action@v1.16.0
         with:
           payload: |
             {
-              "text": "Scrape harvest job run success\n>Run details: ${{ env.ACTION_URL }}/${{ github.run_id }} "
+              "text": "*Scrape harvest: success*\n>Run details: ${{ env.ACTION_URL }}/${{ github.run_id }} "
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
       - name: Send GitHub Action trigger data to Slack - Others
-        if: ${{ !success() }} 
+        if: ${{ success() }} 
         uses: slackapi/slack-github-action@v1.16.0
         with:
           payload: |
