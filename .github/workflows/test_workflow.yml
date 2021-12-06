@@ -31,7 +31,7 @@ jobs:
         with:
           payload: |
             {
-              "text": "*Scrape harvest action ${{ job.status }}*\n>Details see: ${{ env.URL }}. Github_runID: $GITHUB_RUN_ID, Github job id: $GITHUB_JOB, github action id $GITHUB_ACTION, URL: ${{ jobs.$GITHUB_JOB.environment.url }}"
+              "text": "*Scrape harvest action ${{ job.status }}*\n>Details see: ${{ env.URL }}. Github_runID: $GITHUB_RUN_ID, Github job id: $GITHUB_JOB, github action id $GITHUB_ACTION, URL: ${{ jobs.environment.url }}"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
