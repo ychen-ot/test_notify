@@ -18,38 +18,11 @@ jobs:
         with:
           ref: "$BRANCH"
 
-      - name: tag current commit
-        
-
-      - name: push trigger
-        # Save commit url from GitHub Trigger event payload to URL env
-        if: "contains(github.event_name, 'push')"
+      - name: Tag the current branch
         run: |
-          url=${{ github.event.head_commit.url }}
-          echo "URL=$url" >> "$GITHUB_ENV"
-      - name: pull request trigger
-        # Save pull request url from GitHub Trigger event payload to URL env
-        if: "contains(github.event_name, 'pull_request')"
-        run: |
-          url=${{ github.event.pull_request.url }}
-          echo "URL=$url" >> "$GITHUB_ENV"
-      - name: Send GitHub Action trigger data to Slack - Success
-        if: ${{ success() }} 
-        uses: slackapi/slack-github-action@v1.16.0
-        with:
-          payload: |
-            {
-              "text": ":white_check_mark: *Scrape harvest: ${{ job.status }}*\n>Run details: ${{ env.ACTION_URL }}/${{ github.run_id }}"
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-      - name: Send GitHub Action trigger data to Slack - Others
-        if: ${{ !success() }} 
-        uses: slackapi/slack-github-action@v1.16.0
-        with:
-          payload: |
-            {
-              "text": ":x: *Scrape harvest: ${{ job.status }}*\n>Run details: ${{ env.ACTION_URL }}/${{ github.run_id }}"
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          date > generated.txt
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .
+          git commit -m "generated"
+          git push
