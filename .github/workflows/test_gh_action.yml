@@ -9,6 +9,9 @@ on:
 
 env:
   BRANCH: "manual_action_test"
+  IMG_REPO: "registry.gitlab.com/openteams/automation-and-integration/backlog"
+  BUILD_ID: "12345"
+  
 
 jobs:
   build:
@@ -26,3 +29,21 @@ jobs:
           git add .
           git commit -m "generated"
           git push
+
+  deploy:
+    needs: build
+    if: ${{ github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Display Image name
+        debug:
+          msg: 
+          - "QADMIN: {{ env.IMG_REPO }}/qadmin:{{ env.BUILD_ID }}"
+          - "PROXY: {{ env.IMG_REPO }}/proxy:{{ env.BUILD_ID }}"
+
+      - name: Display Image name
+        debug:
+          msg: "Hello hello"
+      
+     
+
