@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          ref: "$BRANCH"
+          ref: ${{ env.BRANCH }}
 
       - name: Tag the current branch
         run: |
