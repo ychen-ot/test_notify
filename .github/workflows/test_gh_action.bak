@@ -11,31 +11,24 @@ env:
   BRANCH: "manual_action_test"
   IMG_REPO: "registry.gitlab.com/openteams/automation-and-integration/backlog"
   BUILD_ID: "12345"
-  SYSTEM: "main"
-  DEPLOY_BRANCH: "manual_action_test"
   
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Set up uat configuration
-        if: {{ env.SYSTEM = 'main' }}
-        run: |
-           ENV="dev"
-           DEPLOY_BRANCH="main"
-           echo "DEPLOY_BRANCH = $DEPLOY_BRANCH"
-      
-      - name: Set up production configuration
-        if: {{ env.SYSTEM == 'more_tests' }}
-        run: |
-           ENV="prod"
-           DEPLOY_BRANCH="more_tests"
-           echo "DEPLOY_BRANCH = $DEPLOY_BRANCH"
-
       - uses: actions/checkout@v2
         with:
-          ref: ${{ env.DEPLOY_BRANCH }}
+          ref: ${{ env.BRANCH }}
 
+      - name: Tag the current branch
+        run: |
+          date > generated.txt
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .
+          git commit -m "generated"
+          git push
 
   deploy:
     runs-on: ubuntu-latest
@@ -44,7 +37,6 @@ jobs:
     steps:
       - name: Display Image name
         run: | 
-          echo "What env? $DEPLOY_BRANCH"
           echo "QADMIN: ${IMG_REPO}/qadmin:${BUILD_ID}"
           echo "PROXY: ${IMG_REPO}/proxy:${BUILD_ID}"
 
