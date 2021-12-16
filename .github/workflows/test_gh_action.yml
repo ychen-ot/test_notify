@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Set up uat configuration
-        if: {{ env.SYSTEM = 'main' }}
+        if: {{ env.SYSTEM == 'main' }}
         run: |
            ENV="dev"
            DEPLOY_BRANCH="main"
