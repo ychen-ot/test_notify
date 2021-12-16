@@ -61,7 +61,7 @@ jobs:
       - name: Pull image to local
         run: |
           echo "Builds to pull: ${BUILD_ID}"
-          echo "docker login -u user -p password ${IMG_REPO}
+          echo "docker login -u user -p password ${IMG_REPO}"
           docker pull ${IMG_REPO}/qadmin:${BUILD_ID}
           docker pull ${IMG_REPO}/proxy:${BUILD_ID}
           
