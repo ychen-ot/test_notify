@@ -16,7 +16,7 @@ env:
   
 jobs:
   build:
-    if: ${{ contains('main more_tests manual_action_test', env.SYSTEM) }}
+    if: ${{ contains('main more_tests manual_action_test', ${{ env.SYSTEM }} ) }}
     runs-on: ubuntu-latest
     steps:
       - name: Update environments
