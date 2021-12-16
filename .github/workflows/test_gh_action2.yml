@@ -67,7 +67,7 @@ jobs:
           
       - name: Start services
         run: |
-          docker-compose up -d
+          echo "docker-compose up -d"
           sleep 5
 
       - name: Deploy to Digital Ocean via Ansible - for develop
