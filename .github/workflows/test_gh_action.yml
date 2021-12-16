@@ -19,14 +19,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Set up uat configuration
-        if: {{ env.SYSTEM == 'main' }}
+        if: ${{ env.SYSTEM == 'main' }}
         run: |
            ENV="dev"
            DEPLOY_BRANCH="main"
            echo "DEPLOY_BRANCH = $DEPLOY_BRANCH"
       
       - name: Set up production configuration
-        if: {{ env.SYSTEM == 'more_tests' }}
+        if: ${{ env.SYSTEM == 'more_tests' }}
         run: |
            ENV="prod"
            DEPLOY_BRANCH="more_tests"
