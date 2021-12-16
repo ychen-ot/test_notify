@@ -16,35 +16,35 @@ env:
   
 jobs:
   build:
+    if: ${{ contains('main more_tests manual_action_test', env.SYSTEM) }}
     runs-on: ubuntu-latest
     steps:
-      - name: Set up uat configuration
-        if: ${{ env.SYSTEM == 'main' }}
+      - name: Update environments
         run: |
-           ENV="dev"
-           DEPLOY_BRANCH="main"
-           echo "DEPLOY_BRANCH = $DEPLOY_BRANCH"
+          echo "DEPLOY_BRANCH=${{ env.SYSTEM }}" >> $GITHUB_ENV
+          echo "ENV=dev" >> $GITHUB_ENV
       
-      - name: Set up production configuration
-        if: ${{ env.SYSTEM == 'more_tests' }}
+      - name: Echo results
         run: |
-           ENV="prod"
-           DEPLOY_BRANCH="more_tests"
-           echo "DEPLOY_BRANCH = $DEPLOY_BRANCH"
+           echo "res: ENV=$ENV"
+           echo "res: DEPLOY_BRANCH = $DEPLOY_BRANCH"
 
-      - uses: actions/checkout@v2
-        with:
-          ref: ${{ env.DEPLOY_BRANCH }}
-
+      - name: Use shell?
+        run: |
+          if [ ${SYSTEM} == 'main' ]; then
+            echo "Hello hello main"
+          else
+            echo "Not main"
+          fi
 
   deploy:
-    runs-on: ubuntu-latest
     needs: build
+    runs-on: ubuntu-latest
     if: ${{ github.event_name == 'push' }}
     steps:
       - name: Display Image name
         run: | 
-          echo "What env? $DEPLOY_BRANCH"
+          echo "What DEPLOY_BRANCH? $DEPLOY_BRANCH"
           echo "QADMIN: ${IMG_REPO}/qadmin:${BUILD_ID}"
           echo "PROXY: ${IMG_REPO}/proxy:${BUILD_ID}"
 
