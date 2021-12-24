@@ -67,7 +67,7 @@ jobs:
                  new_ver=$(expr $last_digit + 1 )
                  ver_prefix=$(echo $version | sed 's/\.[^.]*$//') 
                  new_full_ver="${ver_prefix}.${new_ver}"
-                 cat $new_full_ver > ./qadmin/app/version.txt 
+                 echo "$new_full_ver" > ./qadmin/app/version.txt 
                
                  # git commit this change
                  git add .
