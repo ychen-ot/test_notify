@@ -1,0 +1,57 @@
+name: Manual Deploy 3
+
+on:
+  workflow_dispatch:
+    inputs:
+      system:
+        description: 'System: develop, uat, or main (for production)'
+        required: true
+        default: 'develop'
+      img_id:
+        description: 'Image ID'
+        required: true
+
+
+env:
+  ENV: dev  # It will be changed to prod via ansible
+  SERVER_NAME: develop.jacobhoussian.com
+  IMG_REPO: "registry.gitlab.com/openteams/automation-and-integration/backlog"
+  BUILD_ID: ${{ github.event.inputs.img_id }}
+  DEPLOY_SYS: ${{ github.event.inputs.system }}
+  DEPLOY_BRANCH: develop
+  
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check input
+        run: |
+          if [ "${DEPLOY_SYS}" != "develop" ] && [ "${DEPLOY_SYS}" != "uat" ] && [ "${DEPLOY_SYS}" != "main" ]; then
+            echo "Invalid 'system' input value provided"
+            exit 1
+          else
+            echo "INPUT: BUILD_ID: ${BUILD_ID}"
+            echo "INPUT: DEPLOY_SYS: ${DEPLOY_SYS}"
+          fi
+      
+      - name: Info
+        run: |
+          echo "Deploying build: ${BUILD_ID}"
+          echo "Server name: ${SERVER_NAME}"
+
+      - uses: actions/checkout@v2
+        with:
+          ref: refs/heads/${{ env.DEPLOY_SYS }}
+
+
+      - name: Tag branch if main deployment
+        if: {{ env.DEPLOY_SYS == 'main' }} 
+        run: |
+          # extract version, and also trim whitespace out - just in case.
+          version=$(cat ./qadmin/app/version.txt | sed 's/ //g')
+          if [ "${version}" != "" ]; then
+             # git tag
+             git tag -a "${version}" -m "Deployed with build ${BUILD_ID}"
+             git push --tags
+          fi
+
