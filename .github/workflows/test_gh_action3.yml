@@ -45,13 +45,15 @@ jobs:
 
 
       - name: Tag branch if main deployment
-        if: {{ env.DEPLOY_SYS == 'main' }} 
         run: |
           # extract version, and also trim whitespace out - just in case.
-          version=$(cat ./qadmin/app/version.txt | sed 's/ //g')
-          if [ "${version}" != "" ]; then
-             # git tag
-             git tag -a "${version}" -m "Deployed with build ${BUILD_ID}"
-             git push --tags
+          if [ "${DEPLOY_SYS}" == "main" ]; then
+            version=$(cat ./qadmin/app/version.txt | sed 's/ //g')
+            if [ "${version}" != "" ]; then
+               git tag -a "${version}" -m "Deployed with build ${BUILD_ID}"
+               git push --tags
+            fi
+          else
+            echo "No tagging needed for develop and uat"
           fi
 
