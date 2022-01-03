@@ -51,7 +51,9 @@ jobs:
       - name: Test tag
         run: |
           version=$(cat ./qadmin/app/version.txt | sed 's/ //g')
-          git tag | grep "^${version}$"
+          echo "Version: $version"
+          git tag
+          git tag | grep "${version}"
         
 
       - name: Tag branch if main deployment
@@ -61,7 +63,7 @@ jobs:
             version=$(cat ./qadmin/app/version.txt | sed 's/ //g')
             if [ "${version}" != "" ]; then
               # Check if tag already exists.
-              match_tag=$(git tag | grep "^${version}$")
+              match_tag=$(git tag | grep "${version}")
               if [ "${match_tag}" != "" ]; then
                 echo "Tag '${version}' exists.  Please manually create a new tag in main, and update version.txt to next version"
 
