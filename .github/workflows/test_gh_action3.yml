@@ -47,13 +47,14 @@ jobs:
       - uses: actions/checkout@v2
         with:
           ref: refs/heads/${{ env.DEPLOY_SYS }}
+          fetch-depth: '0'
 
       - name: Test tag
         run: |
           version=$(cat ./qadmin/app/version.txt | sed 's/ //g')
           echo "Version: $version"
           git tag
-          git tag | grep "${version}"
+          git tag | grep "^${version}$"
         
 
       - name: Tag branch if main deployment
@@ -63,10 +64,9 @@ jobs:
             version=$(cat ./qadmin/app/version.txt | sed 's/ //g')
             if [ "${version}" != "" ]; then
               # Check if tag already exists.
-              match_tag=$(git tag | grep "${version}")
+              match_tag=$(git tag | grep "^${version}$")
               if [ "${match_tag}" != "" ]; then
-                echo "Tag '${version}' exists.  Please manually create a new tag in main, and update version.txt to next version"
-
+                echo "Tag '${version}' exists.  Please manually create a new tag in main and update version.txt to next version in develop"
               else
                 echo "Tagging branch with '${version}'"
                 git config --global user.email "githubaction@openteams.com"
