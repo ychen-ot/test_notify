@@ -62,6 +62,9 @@ jobs:
 
               # tag does not exist, so tag, and update version
               else
+
+                echo "Tagging main branch with '${version}'"
+
                 # Tag git
                 git config --global user.email "githubaction@openteams.com"
                 git config --global user.name "Github Action"
@@ -69,19 +72,21 @@ jobs:
                 git push --tags
 
                 # switch branch
-                git checkout develop
+                # git checkout develop
 
                 # Increment version, update version, and commit
+                echo "Incrementing version..."
                 last_digit=${version##*.}
                 if [ "${last_digit}" != "" ]; then
                   new_ver=$(expr $last_digit + 1 )
                   ver_prefix=$(echo $version | sed 's/\.[^.]*$//') 
                   new_full_ver="${ver_prefix}.${new_ver}"
+                  echo "New version: $new_full_ver"
                   echo "$new_full_ver" > ./qadmin/app/version.txt 
               
                   # git commit this change
                   git add .
-                  git commit -m "generated"
+                  git commit -m "Version updated - generated"
                   git push
                 fi
               fi
