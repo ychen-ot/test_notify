@@ -48,6 +48,11 @@ jobs:
         with:
           ref: refs/heads/${{ env.DEPLOY_SYS }}
 
+      - name: Test tag
+        run: |
+          version=$(cat ./qadmin/app/version.txt | sed 's/ //g')
+          git tag | grep "^${version}$"
+        
 
       - name: Tag branch if main deployment
         run: |
