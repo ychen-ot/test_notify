@@ -1,0 +1,95 @@
+name: Manual Deploy 4 and Tag 
+
+on:
+  workflow_dispatch:
+    inputs:
+      img_id:
+        description: 'Image ID'
+        required: true
+
+
+env:
+  ENV: dev  # It will be changed to prod via ansible
+  SERVER_NAME: develop.jacobhoussian.com
+  IMG_REPO: "registry.gitlab.com/openteams/automation-and-integration/backlog"
+  BUILD_ID: ${{ github.event.inputs.img_id }}
+  DEPLOY_SYS: "main"
+  
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Info
+        run: |
+          echo "Deploying build: ${BUILD_ID}"
+
+      # While deployment needs only code from qadmin, flask app needs qadmin-pm-apps
+      - uses: actions/checkout@v2
+        with:
+          ref: refs/heads/main
+          submodules: true
+
+      - name: Echo Create Environment variables file
+        run: |
+          echo "envsubst < .qreportrc.tpl > .qreportrc"
+          echo "envsubst < .env.tpl > .env"
+
+      - name: Echo Pull image to local
+        run: |
+          echo "Builds to pull: ${BUILD_ID}"
+          echo "docker login -u secrets.GITLAB_USER -p secrets.GITLAB_DEPLOY_TOKEN ${IMG_REPO}"
+          echo "docker pull ${IMG_REPO}/qadmin:${BUILD_ID}"
+
+      - name: Echo Start flask service
+        run: |
+          echo "docker-compose up -d flask_api"
+          sleep 5
+
+      - name: Deploy to Digital Ocean via Ansible
+        run: |
+          echo "docker-compose exec -T flask_api bash -c 'echo ANSIBLE_VAULT_KEY > .vault_pass.txt'"
+          echo "docker-compose exec -T flask_api ansible-playbook deployment/site.yml --vault-password-file .vault_pass.txt -vv --extra-vars 'branch=main digital_ocean_droplet_name=quadmin digital_ocean_image_tag=quadmin digital_ocean_ssh_key_name=quadmin-ssh-key gitlab_user=gitlab_user gitlab_deploy_token=gitlab_deploy_token build_id=$BUILD_ID'"
+
+  tag_version:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: refs/heads/main
+          fetch-depth: '0'
+
+      - name: Tag branch in main and update version in develop
+        run: |
+          # extract version, and also trim whitespace out - just in case.
+          # NOTE: script will fail if version.txt contains a value that is already tagged.
+          version=$(cat ./qadmin/app/version.txt | sed 's/ //g')
+          if [ "${version}" != "" ]; then
+            # Create tag in main branch
+            echo "Tagging `main` branch with '${version}'"
+            git config --global user.email "githubaction@openteams.com"
+            git config --global user.name "Github Action"
+            git tag -a "${version}" -m "Deployed with build ${BUILD_ID}"
+            git push --tags
+
+            # Update version in develop
+            echo "Incrementing version in version.txt file in `develop`."
+            git checkout develop
+
+            last_digit=${version##*.}
+            if [ "${last_digit}" != "" ]; then
+              new_ver=$(expr $last_digit + 1 )
+              ver_prefix=$(echo $version | sed 's/\.[^.]*$//')
+              new_full_ver="${ver_prefix}.${new_ver}"
+              echo "New version: $new_full_ver"
+              echo "$new_full_ver" > ./qadmin/app/version.txt
+
+              # git commit this change
+              git add .
+              git commit -m "Version updated - generated"
+              git push
+            else
+              echo "ERROR: Version contained in version.txt is not in correct format, please fix"
+              exit 1
+            fi
+          fi
