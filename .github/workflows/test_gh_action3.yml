@@ -54,7 +54,6 @@ jobs:
           version=$(cat ./qadmin/app/version.txt | sed 's/ //g')
           echo "Version: $version"
           git tag
-          git tag | grep "^${version}$"
 
       - name: Tag branch if main deployment
         run: |
