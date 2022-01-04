@@ -59,46 +59,39 @@ jobs:
       - name: Tag branch if main deployment
         run: |
           # extract version, and also trim whitespace out - just in case.
+          # NOTE: script will fail if version.txt contains a value that is already tagged.
           if [ "${DEPLOY_SYS}" == "main" ]; then
             version=$(cat ./qadmin/app/version.txt | sed 's/ //g')
             if [ "${version}" != "" ]; then
+              # Create tag in main branch
+              echo "Tagging `main` branch with '${version}'"
+              git config --global user.email "githubaction@openteams.com"
+              git config --global user.name "Github Action"
+              git tag -a "${version}" -m "Deployed with build ${BUILD_ID}"
+              git push --tags
 
-              # Check if tag already exists.
-              match_tag=$(git tag | grep "^${version}$")
-
-              if [ "${match_tag}" == "" ]; then
-
-                # Create tag in main branch
-                echo "Tagging `main` branch with '${version}'"
-                git config --global user.email "githubaction@openteams.com"
-                git config --global user.name "Github Action"
-                git tag -a "${version}" -m "Deployed with build ${BUILD_ID}"
-                git push --tags
-
-                # Update version in develop
-                echo "Incrementing version in version.txt file in `develop`."
-                git checkout develop
+              # Update version in develop
+              echo "Incrementing version in version.txt file in `develop`."
+              git checkout develop
  
-                last_digit=${version##*.}
-                if [ "${last_digit}" != "" ]; then
-                  new_ver=$(expr $last_digit + 1 )
-                  ver_prefix=$(echo $version | sed 's/\.[^.]*$//')
-                  new_full_ver="${ver_prefix}.${new_ver}"
-                  echo "New version: $new_full_ver"
-                  echo "$new_full_ver" > ./qadmin/app/version.txt
+              last_digit=${version##*.}
+              if [ "${last_digit}" != "" ]; then
+                new_ver=$(expr $last_digit + 1 )
+                ver_prefix=$(echo $version | sed 's/\.[^.]*$//')
+                new_full_ver="${ver_prefix}.${new_ver}"
+                echo "New version: $new_full_ver"
+                echo "$new_full_ver" > ./qadmin/app/version.txt
 
-                  # git commit this change
-                  git add .
-                  git commit -m "Version updated - generated"
-                  git push
-                else
-                  echo "Version contained in version.txt is not in correct format. Version update skipped."
-                fi
+                # git commit this change
+                git add .
+                git commit -m "Version updated - generated"
+                git push
               else
-                echo "Tag '${version}' exists.  Please manually create a new tag in main and update version.txt to next version in develop"
+                echo "ERROR: Version contained in version.txt is not in correct format, please fix"
+                exit 1
               fi
             fi
           else
-            echo "No tagging needed for develop and uat"
+            echo "No tagging needed for `develop` and `uat`"
           fi
 
