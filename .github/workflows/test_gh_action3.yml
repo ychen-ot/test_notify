@@ -1,0 +1,96 @@
+name: Manual Deploy 3
+
+on:
+  workflow_dispatch:
+    inputs:
+      system:
+        description: 'System: develop, uat, or main (for production)'
+        required: true
+        default: 'develop'
+      img_id:
+        description: 'Image ID'
+        required: true
+
+
+env:
+  ENV: dev  # It will be changed to prod via ansible
+  SERVER_NAME: develop.jacobhoussian.com
+  IMG_REPO: "registry.gitlab.com/openteams/automation-and-integration/backlog"
+  BUILD_ID: ${{ github.event.inputs.img_id }}
+  DEPLOY_SYS: ${{ github.event.inputs.system }}
+  DEPLOY_BRANCH: develop
+  
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check input
+        run: |
+          if [ "${DEPLOY_SYS}" != "develop" ] && [ "${DEPLOY_SYS}" != "uat" ] && [ "${DEPLOY_SYS}" != "main" ]; then
+            echo "Invalid 'system' input value provided"
+            exit 1
+          else
+            echo "INPUT: BUILD_ID: ${BUILD_ID}"
+            echo "INPUT: DEPLOY_SYS: ${DEPLOY_SYS}"
+          fi
+      
+      - name: Info
+        run: |
+          echo "Deploying build: ${BUILD_ID}"
+          echo "Server name: ${SERVER_NAME}"
+
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJSON(github) }}
+        run: echo "$GITHUB_CONTEXT"
+
+      - uses: actions/checkout@v2
+        with:
+          ref: refs/heads/${{ env.DEPLOY_SYS }}
+          fetch-depth: '0'
+
+      - name: Test tag
+        run: |
+          version=$(cat ./qadmin/app/version.txt | sed 's/ //g')
+          echo "Version: $version"
+          git tag
+
+      - name: Tag branch if main deployment
+        run: |
+          # extract version, and also trim whitespace out - just in case.
+          # NOTE: script will fail if version.txt contains a value that is already tagged.
+          if [ "${DEPLOY_SYS}" == "main" ]; then
+            version=$(cat ./qadmin/app/version.txt | sed 's/ //g')
+            if [ "${version}" != "" ]; then
+              # Create tag in main branch
+              echo "Tagging `main` branch with '${version}'"
+              git config --global user.email "githubaction@openteams.com"
+              git config --global user.name "Github Action"
+              git tag -a "${version}" -m "Deployed with build ${BUILD_ID}"
+              git push --tags
+
+              # Update version in develop
+              echo "Incrementing version in version.txt file in `develop`."
+              git checkout develop
+ 
+              last_digit=${version##*.}
+              if [ "${last_digit}" != "" ]; then
+                new_ver=$(expr $last_digit + 1 )
+                ver_prefix=$(echo $version | sed 's/\.[^.]*$//')
+                new_full_ver="${ver_prefix}.${new_ver}"
+                echo "New version: $new_full_ver"
+                echo "$new_full_ver" > ./qadmin/app/version.txt
+
+                # git commit this change
+                git add .
+                git commit -m "Version updated - generated"
+                git push
+              else
+                echo "ERROR: Version contained in version.txt is not in correct format, please fix"
+                exit 1
+              fi
+            fi
+          else
+            echo "No tagging needed for `develop` and `uat`"
+          fi
+
