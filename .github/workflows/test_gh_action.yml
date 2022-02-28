@@ -1,0 +1,55 @@
+
+name: test_workflow_notify
+
+on:
+  push:
+    branches: [ more_tests ]
+  pull_request:
+    branches: [ more_tests ]
+
+env:
+  BRANCH: "manual_action_test"
+  IMG_REPO: "registry.gitlab.com/openteams/automation-and-integration/backlog"
+  BUILD_ID: "12345"
+  SYSTEM: "main"
+  DEPLOY_BRANCH: "manual_action_test"
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update environments
+        run: |
+          echo "DEPLOY_BRANCH=${{ env.SYSTEM }}" >> $GITHUB_ENV
+          echo "ENV=dev" >> $GITHUB_ENV
+      
+      - name: Echo results
+        run: |
+           echo "res: ENV=$ENV"
+           echo "res: DEPLOY_BRANCH = $DEPLOY_BRANCH"
+
+      - name: Use shell?
+        run: |
+          if [ ${SYSTEM} == 'main' ]; then
+            echo "Hello hello main"
+          else
+            echo "Not main"
+          fi
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' }}
+    steps:
+      - name: Display Image name
+        run: | 
+          echo "What DEPLOY_BRANCH? $DEPLOY_BRANCH"
+          echo "QADMIN: ${IMG_REPO}/qadmin:${BUILD_ID}"
+          echo "PROXY: ${IMG_REPO}/proxy:${BUILD_ID}"
+
+      - name: Say Hello
+        run: | 
+          echo "Hello hello"
+      
+     
+
