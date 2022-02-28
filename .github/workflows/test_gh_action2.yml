@@ -1,0 +1,83 @@
+name: Manual Deploy 2
+
+on:
+  workflow_dispatch:
+    inputs:
+      system:
+        description: 'System: develop, uat, or main (for production)'
+        required: true
+        default: 'develop'
+      img_id:
+        description: 'Image ID'
+        required: true
+
+
+env:
+  ENV: dev  # It will be changed to prod via ansible
+  SERVER_NAME: develop.jacobhoussian.com
+  IMG_REPO: "registry.gitlab.com/openteams/automation-and-integration/backlog"
+  BUILD_ID: ${{ github.event.inputs.img_id }}
+  DEPLOY_SYS: ${{ github.event.inputs.system }}
+  DEPLOY_BRANCH: develop
+  
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check input
+        run: |
+          if [ "${DEPLOY_SYS}" != "develop" ] && [ "${DEPLOY_SYS}" != "uat" ] && [ "${DEPLOY_SYS}" != "main" ]; then
+            echo "Invalid 'system' input value provided"
+            exit 1
+          else
+            echo "INPUT: BUILD_ID: ${BUILD_ID}"
+            echo "INPUT: DEPLOY_SYS: ${DEPLOY_SYS}"
+          fi
+      
+      - name: Set variables
+        run: |
+          if [ "${DEPLOY_SYS}" == "uat" ]; then
+            echo "SERVER_NAME=uat.admin.quansight.dev" >> $GITHUB_ENV
+          else 
+            if [ "${DEPLOY_SYS}" == "main" ]; then 
+              echo "SERVER_NAME=qadmin.secret.server.name" >> $GITHUB_ENV
+            fi
+          fi
+      
+      - name: Info
+        run: |
+          echo "Deploying build: ${BUILD_ID}"
+          echo "Server name: ${SERVER_NAME}"
+
+      - uses: actions/checkout@v2
+        with:
+          ref: refs/heads/${{ env.DEPLOY_SYS }}
+
+      # Deployment needs only code on the qadmin branch
+      - name: Create Environment variables file
+        run: |
+          env 
+
+      - name: Pull image to local
+        run: |
+          echo "Builds to pull: ${BUILD_ID}"
+          echo "docker login -u user -p password ${IMG_REPO}"
+          echo "docker pull ${IMG_REPO}/qadmin:${BUILD_ID}"
+          echo "docker pull ${IMG_REPO}/proxy:${BUILD_ID}"
+          
+      - name: Start services
+        run: |
+          echo "docker-compose up -d"
+          sleep 5
+
+      - name: Deploy to Digital Ocean via Ansible - for develop
+        run: |
+          if [ "${DEPLOY_SYS}" == "uat" ]; then
+            echo "Run docker compose for uat"
+          else 
+            if [ "${DEPLOY_SYS}" == "main" ]; then 
+              echo "Run docker compose for main"
+            else
+              echo "Run docker compose for develop"
+            fi
+          fi
